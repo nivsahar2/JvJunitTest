@@ -54,7 +54,7 @@ class BasicTest {
 	void test3() {
 		try {
 			System.out.print("Test3\n");
-			Assertions.assertTrue(1>2);
+			Assertions.assertTrue(5>2);
 		}catch(Exception e){
 			fail("Test3 failed");
 		}

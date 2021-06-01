@@ -1,8 +1,10 @@
 package Process;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 
 
 
@@ -10,41 +12,158 @@ import java.io.InputStreamReader;
 
 public class ProcessRun
 {
-	private	String std_out;
+	//	Process handler;
+	private Process proc = null;
 	
-	public String Output() {
-		return this.std_out;
+	//	Standard IO readers and writers.
+	private BufferedReader stdInput = null;
+	private BufferedReader stdError = null;
+	private BufferedWriter stdOut = null;
+
+	
+	
+	//	Initiate a new process.
+	private Boolean  ProcNew(String[] proc_command) throws IOException
+	{
+		//	Run the sub process.
+		Runtime rt = Runtime.getRuntime();
+		this.proc = rt.exec(proc_command);
+		
+		//	Create standard IO readers/writer.
+		this.stdInput = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+		this.stdError = new BufferedReader(new InputStreamReader(proc.getErrorStream()));
+		this.stdOut = new BufferedWriter( new OutputStreamWriter(proc.getOutputStream()));
+		return(true);
 	}
 	
-	private String std_error;
-	public String Error() {
-		return this.std_error;
+	
+	//	Read the sub-process output stream.
+	private String OutputGet() throws IOException
+	{
+		String std_out = "";
+		char cbuf[] = new char[1024];
+		
+		//	While output stream not empty.
+		while(this.stdInput.ready())
+		{
+			//	Read the stream.
+			StringBuffer sb = new StringBuffer();
+			int length = this.stdInput.read(cbuf, 0, 1024);
+			//	Add the buffer charcters to the string buffer.
+			for(int i = 0; i< length; i++) {
+				sb.append(cbuf[i]);
+			}
+			//	Add the characters as a  string.
+			std_out += sb.toString();
+		}
+		return std_out;
+	}
+	
+	//	Get the sub process error standard output.
+	public String ErrorGet() throws IOException
+	{
+		String std_error = "";
+		if(this.stdError.ready()) {
+			std_error = this.stdError.readLine();
+		}
+		return std_error;
 	}
 
-	//	provide command and paramaters as an array of strings.
-	//	To pring all directory files provide : {"dir", "c:\\"};
-	public void Execute(String[] commands) throws IOException
+	
+
+	
+	
+	/**	Execute command line application.
+	*	provide executable and command line parameters as an array of strings.
+	*	To print all directory files provide : {"dir", "c:\\"};
+	*/
+	public String Execute(String[] proc_command) throws Exception
 	{
-		Runtime rt = Runtime.getRuntime();
+		String std_out = "";
+		String std_error = "";
 		
-		Process proc = rt.exec(commands);
-		BufferedReader stdInput = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-		BufferedReader stdError = new BufferedReader(new InputStreamReader(proc.getErrorStream()));
+		this.ProcNew(proc_command);
+		
+		// Read the output from the command
+		String out = null;
+		while ((out = this.stdInput.readLine()) != null) {
+			std_out += out;
+		}
+
+		// Read any errors from the attempted command.
+		String error = null;
+		while ((error = this.stdError.readLine()) != null) {
+			std_error += error;
+		}
+		if(!std_error.isEmpty()) {
+			throw new Exception(std_error);
+		}
+
+		return(std_out);
+	}
+	
+
+	/**	Execute a sub-process application.
+	*	provide executable and command line parameters as an array of strings.
+	*	To print all directory files provide : {"dir", "c:\\"};
+	*/	
+	public String Run(String[] proc_command) throws Exception
+	{	
+		//	Run the sub process.
+		this.ProcNew(proc_command);
+		//	Waite for sub process output.
+		while(!this.stdInput.ready());
+		
+		// Read the output from the sub-process.
+		String std_out = this.OutputGet();
+		
+		// Read any errors from the attempted command.
+		String error = this.ErrorGet();
+		if(!error.isEmpty()) {
+			throw new Exception(error);
+		}
+		
+		return(std_out);
+	}
+	
+	
+	//	Write command string to the sub process and return it's response.
+	public String Command(String command) throws Exception
+	{	
+		//	Write to standard output.
+		this.stdOut.write(command);
+		this.stdOut.flush();
+		
+		//	Wait for sub process response.
+		while(!this.stdInput.ready());
+		
+		// Read the output from the command
+		String std_out = this.OutputGet();
+
+		//	Get sub process standard error.
+		String error = this.ErrorGet();
+		if(!error.isEmpty()) {
+			//	Throw exception in case of error.
+			throw new Exception(error);
+		}
+		return(std_out);
+	}
+
+	
+	public String Exit() throws Exception
+	{
+		this.stdOut.write("exit()");
+		this.stdOut.flush();
 
 		// Read the output from the command
-		//System.out.println("Here is the standard output of the command:\n");
-		String out = null;
-		while ((out = stdInput.readLine()) != null) {
-			this.std_out += out;
-		    System.out.println(out);
+		String std_out = this.OutputGet();
+		
+		//	Get sub process standard error.
+		String error = this.ErrorGet();
+		if(!error.isEmpty()) {
+			//	Throw exception in case of error.
+			throw new Exception(error);
 		}
-
-		// Read any errors from the attempted command
-		//System.out.println("Here is the standard error of the command (if any):\n");
-		String error = null;
-		while ((error = stdError.readLine()) != null) {
-			this.std_error += error;
-		    System.out.println(error);
-		}
+		return(std_out);
 	}
 }
