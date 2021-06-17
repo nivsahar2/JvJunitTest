@@ -29,11 +29,16 @@ import Process.ProcessRun;
  */
 class ProcessTest {
 
+	String output ;
+	ProcessRun process ;
+	String[] command = {"C:\\QA_Tirgol\\CshConsoleAPI\\bin\\Debug\\CshConsoleAPI.exe",""};
+	
 	/**
 	 * @throws java.lang.Exception
 	 */
 	@BeforeAll
 	static void setUpBeforeClass() throws Exception {
+		
 	}
 
 	/**
@@ -43,11 +48,13 @@ class ProcessTest {
 	static void tearDownAfterClass() throws Exception {
 	}
 
-	/**
+	/** 
 	 * @throws java.lang.Exception
 	 */
 	@BeforeEach
 	void setUp() throws Exception {
+		output = "";
+		process = new ProcessRun();
 	}
 
 	/**
@@ -59,7 +66,7 @@ class ProcessTest {
 
 
 	/***
-	 * Test the stack trace pring is working.
+	 * Test the stack trace print is working.
 	 */
 	@Test
 	void testTrace() {	
@@ -84,7 +91,6 @@ class ProcessTest {
 	 */	
 	@Test
 	void testCmdDir() {
-		ProcessRun process = new ProcessRun();
 		
 		try {
 			String[] dir_rist = {"dir", "c:\\"};
@@ -102,10 +108,8 @@ class ProcessTest {
 	 */
 	@Test
 	void testConsole() {
-		String output = "";
-		ProcessRun process = new ProcessRun();
-		String[] command = {"C:\\_SourceDev.Test\\WsCppConsoleAPI\\CppConsoleAPI\\Debug\\CppConsoleAPI.exe",""};
 		try {
+			ProcessRun process = new ProcessRun();
 			output = process.Run(command);
 			System.out.println(output);
 						
@@ -129,22 +133,29 @@ class ProcessTest {
 	
 	/***
 	 * Test the console application runs 
-	 * and execute command-line echo command.
+	 * and execute command-line multiple commands.
 	 */
 	@Test
-	void testEchoCommand() {
-		String output = "";
-		ProcessRun process = new ProcessRun();
-		String[] command = {"C:\\_SourceDev.Test\\WsCppConsoleAPI\\CppConsoleAPI\\Debug\\CppConsoleAPI.exe",""};
+	void testCommands() {
+		
 		try {
 			output = process.Run(command);
-			Assert.assertTrue(output.contentEquals("\r\n>"));
+			Assert.assertTrue(output.contentEquals("\n>"));
 			
 			output = process.Command("echo(Hello world)\n");
-			Assert.assertTrue(output.contentEquals("Hello world\r\n>"));
-
-			output = process.Command("echo(Hello world)\n");
-			Assert.assertTrue(output.contentEquals("Hello world\r\n>"));
+			Assert.assertTrue(output.contentEquals("Hello world\r\n\n>"));
+			
+			output = process.Command("mul(4,6)\n");
+			Assert.assertTrue(output.contentEquals("24\r\n\n>"));
+			
+			output = process.Command("add(4,6)\n");
+			Assert.assertTrue(output.contentEquals("10\r\n\n>"));
+			
+			output = process.Command("sub(8,6)\n");
+			Assert.assertTrue(output.contentEquals("2\r\n\n>"));
+			
+			output = process.Command("div(4,2)\n");
+			Assert.assertTrue(output.contentEquals("2\r\n\n>"));
 
 			output = process.Exit();			
 		}
@@ -163,4 +174,7 @@ class ProcessTest {
 		return;
 	}
 
+	
+
 }
+
