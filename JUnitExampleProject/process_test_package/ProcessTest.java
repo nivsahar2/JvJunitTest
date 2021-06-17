@@ -53,6 +53,7 @@ class ProcessTest {
 	 */
 	@BeforeEach
 	void setUp() throws Exception {
+		System.out.println("Setup before every test");
 		output = "";
 		process = new ProcessRun();
 	}
@@ -62,6 +63,7 @@ class ProcessTest {
 	 */
 	@AfterEach
 	void tearDown() throws Exception {
+	System.out.println("After every test test");
 	}
 
 
